@@ -61,7 +61,7 @@ class Subexec
       end
 
       break if ret == pid
-      sleep 0.001
+      sleep 0.01
       if Time.now > timer
         timed_out = true
         break
