@@ -46,7 +46,7 @@ class Subexec
   
   def run!
     r, w = IO.pipe
-    self.pid = Process.spawn(command, STDERR=>STDOUT, STDOUT=>w)
+    self.pid = Process.spawn(command, STDERR=>w, STDOUT=>w)
     w.close
     
     self.timer = Time.now + timeout
