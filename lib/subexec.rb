@@ -35,52 +35,69 @@ class Subexec
   attr_accessor :exitstatus
 
   def self.run(command, options={})
-    new(command, options)
+    sub = new(command, options)
+    sub.run!
+    sub
   end
   
   def initialize(command, options={})
     self.command  = command
     self.timeout  = options[:timeout] || -1 # default is to never timeout
-    run!
   end
   
   def run!
-    r, w = IO.pipe
-    self.pid = Process.spawn(command, STDERR=>w, STDOUT=>w)
-    w.close
-    
-    self.timer = Time.now + timeout
-    timed_out = false
-
-    loop do
-      begin
-        flags = (timeout > 0 ? Process::WUNTRACED|Process::WNOHANG : 0)
-        ret = Process.waitpid(pid, flags)
-      rescue Errno::ECHILD
-        break
-      end
-
-      break if ret == pid
-      sleep 0.01
-      if Time.now > timer
-        timed_out = true
-        break
-      end
-    end
-    
-    if timed_out
-      # The subprocess timed out -- kill it
-      Process.kill(9, pid) rescue Errno::ESRCH
-      self.exitstatus = nil
+    if timeout > 0 && RUBY_VERSION >= '1.9'
+      spawn
     else
-      # The subprocess exited on its own
-      self.exitstatus = $?.exitstatus
-      self.output = r.readlines.join("")
+      exec
     end
-    r.close
-    
-    self
   end
+
+
+  private
+  
+    def spawn
+      r, w = IO.pipe
+      self.pid = Process.spawn(command, STDERR=>w, STDOUT=>w)
+      w.close
+
+      self.timer = Time.now + timeout
+      timed_out = false
+
+      loop do
+        begin
+          flags = (timeout > 0 ? Process::WUNTRACED|Process::WNOHANG : 0)
+          ret = Process.waitpid(pid, flags)
+        rescue Errno::ECHILD
+          break
+        end
+
+        break if ret == pid
+        sleep 0.01
+        if Time.now > timer
+          timed_out = true
+          break
+        end
+      end
+
+      if timed_out
+        # The subprocess timed out -- kill it
+        Process.kill(9, pid) rescue Errno::ESRCH
+        self.exitstatus = nil
+      else
+        # The subprocess exited on its own
+        self.exitstatus = $?.exitstatus
+        self.output = r.readlines.join("")
+      end
+      r.close
+      
+      self
+    end
+  
+    def exec
+      self.output = `#{command} 2>&1`
+      self.exitstatus = $?.exitstatus
+    end
 
 end
 

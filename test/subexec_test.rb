@@ -12,7 +12,13 @@ class SubexecTest < Test::Unit::TestCase
     
     should "timeout helloworld script" do
       sub = Subexec.run "#{TEST_PROG} 2", :timeout => 1
-      assert_equal sub.exitstatus, nil
+      if RUBY_VERSION >= '1.9'
+        assert_equal sub.exitstatus, nil
+      else
+        # Ruby 1.8 doesn't support the timeout, so the
+        # subprocess will have to exit on its own
+        assert_equal sub.exitstatus, 0
+      end
     end
     
   end

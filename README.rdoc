@@ -25,5 +25,5 @@ and never returns control back to the original process. Enter Subexec.
 
 === Limitations
 
-Supports only Ruby 1.9.
-
+Only Ruby 1.9 can spawn non-blocking subprocesses, via Process.spawn.
+So Ruby 1.8 support is sheerly for backwards compatibility. 
