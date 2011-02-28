@@ -14,4 +14,9 @@ Rake::TestTask.new(:test) do |test|
   test.verbose = true
 end
 
+desc "Benchmark"
+task :benchmark do
+  sh "ruby test/benchmark.rb"
+end
+
 task :default => :test
