@@ -33,6 +33,7 @@ class Subexec
   attr_accessor :timer
   attr_accessor :output
   attr_accessor :exitstatus
+  attr_accessor :lang
 
   def self.run(command, options={})
     sub = new(command, options)
@@ -43,6 +44,7 @@ class Subexec
   def initialize(command, options={})
     self.command  = command
     self.timeout  = options[:timeout] || -1 # default is to never timeout
+    self.lang     = options[:lang] || "C"
   end
   
   def run!
@@ -58,7 +60,7 @@ class Subexec
   
     def spawn
       r, w = IO.pipe
-      self.pid = Process.spawn(command, STDERR=>w, STDOUT=>w)
+      self.pid = Process.spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
       w.close
 
       self.timer = Time.now + timeout
@@ -95,7 +97,7 @@ class Subexec
     end
   
     def exec
-      self.output = `#{command} 2>&1`
+      self.output = `export LANG=#{lang} && #{command} 2>&1`
       self.exitstatus = $?.exitstatus
     end
 
