@@ -48,7 +48,7 @@ class Subexec
   end
   
   def run!
-    if timeout > 0 && RUBY_VERSION >= '1.9'
+    if RUBY_VERSION >= '1.9'
       spawn
     else
       exec
@@ -66,20 +66,28 @@ class Subexec
       self.timer = Time.now + timeout
       timed_out = false
 
-      loop do
+      waitpid = Proc.new do
         begin
           flags = (timeout > 0 ? Process::WUNTRACED|Process::WNOHANG : 0)
-          ret = Process.waitpid(pid, flags)
+          Process.waitpid(pid, flags)
         rescue Errno::ECHILD
           break
         end
+      end
 
-        break if ret == pid
-        sleep 0.01
-        if Time.now > timer
-          timed_out = true
-          break
+      if timeout > 0
+        loop do
+          ret = waitpid.call
+
+          break if ret == pid
+          sleep 0.01
+          if Time.now > timer
+            timed_out = true
+            break
+          end
         end
+      else
+        waitpid.call
       end
 
       if timed_out
@@ -98,7 +106,6 @@ class Subexec
   
     def exec
       self.output = `export LANG=#{lang} && #{command} 2>&1`
-      self.exitstatus = $?.exitstatus
     end
 
 end
