@@ -1,22 +1,14 @@
-require 'rake'
-require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'bundler'
+Bundler::GemHelper.install_tasks
 
-spec = eval(File.read('subexec.gemspec'))
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.gem_spec = spec
-end
-
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'test'
-  test.pattern = 'test/**/*_test.rb'
-  test.verbose = true
+require 'rspec/core/rake_task'
+RSpec::Core::RakeTask.new(:spec) do |spec|
+  spec.pattern = 'spec/**/*_spec.rb'
 end
 
 desc "Benchmark"
 task :benchmark do
-  sh "ruby test/benchmark.rb"
+  sh "ruby benchmark/run.rb"
 end
 
-task :default => :test
+task :default => :spec

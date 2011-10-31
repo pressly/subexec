@@ -1,6 +1,6 @@
 # = Subexec
 # * by Peter Kieltyka
-# * http://github/nulayer/subprocess
+# * http://github/nulayer/subexec
 # 
 # === Description
 # 
@@ -26,14 +26,15 @@
 # puts sub.exitstatus # returns:
 
 class Subexec
+  VERSION = '0.2.0'
 
-  attr_accessor :pid
-  attr_accessor :command
-  attr_accessor :timeout
-  attr_accessor :timer
-  attr_accessor :output
-  attr_accessor :exitstatus
-  attr_accessor :lang
+  attr_accessor :pid,
+                :command,
+                :timeout,
+                :timer,
+                :output,
+                :exitstatus,
+                :lang
 
   def self.run(command, options={})
     sub = new(command, options)
@@ -42,9 +43,9 @@ class Subexec
   end
   
   def initialize(command, options={})
-    self.command  = command
-    self.timeout  = options[:timeout] || -1 # default is to never timeout
-    self.lang     = options[:lang] || "C"
+    self.command    = command
+    self.timeout    = options[:timeout] || -1     # default is to never timeout
+    self.lang       = options[:lang]    || "C"
     self.exitstatus = 0
   end
   
