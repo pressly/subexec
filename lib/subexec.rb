@@ -45,6 +45,7 @@ class Subexec
     self.command  = command
     self.timeout  = options[:timeout] || -1 # default is to never timeout
     self.lang     = options[:lang] || "C"
+    self.exitstatus = 0
   end
   
   def run!
