@@ -39,16 +39,18 @@ describe Subexec do
     end
 
     it 'can pass a log_file' do
-      require 'tempfile'
-      log_file = Tempfile.new('foo')
+      if RUBY_VERSION >= '1.9'
+        require 'tempfile'
+        log_file = Tempfile.new('foo')
       
-      sub = Subexec.run "#{TEST_PROG} 1", :log_file => log_file.path
-      sub.output.should == ''
-      sub.exitstatus.should == 0
+        sub = Subexec.run "#{TEST_PROG} 1", :log_file => log_file.path
+        sub.output.should == ''
+        sub.exitstatus.should == 0
       
-      log_file.read.should == "Hello\nWorld\n"
-      log_file.close
-      log_file.unlink
+        log_file.read.should == "Hello\nWorld\n"
+        log_file.close
+        log_file.unlink
+      end
     end
     
   end  
