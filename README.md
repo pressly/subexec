@@ -12,6 +12,8 @@ Useful for libraries that are Ruby wrappers for CLI's. For example,
 resizing images with ImageMagick's mogrify command sometimes stalls
 and never returns control back to the original process. Enter Subexec.
 
+Tested with MRI 1.9.3, 1.9.2, 1.8.7
+
 ## Usage
 
 ```ruby

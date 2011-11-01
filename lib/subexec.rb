@@ -1,8 +1,8 @@
-# = Subexec
+# # Subexec
 # * by Peter Kieltyka
 # * http://github/nulayer/subexec
 # 
-# === Description
+# ## Description
 # 
 # Subexec is a simple library that spawns an external command with
 # an optional timeout parameter. It relies on Ruby 1.9's Process.spawn
@@ -11,9 +11,9 @@
 # Useful for libraries that are Ruby wrappers for CLI's. For example,
 # resizing images with ImageMagick's mogrify command sometimes stalls
 # and never returns control back to the original process. Subexec
-# executes mogrify and preempts if gets lost.
+# executes mogrify and preempts if it gets lost.
 # 
-# === Usage
+# ## Usage
 # 
 # # Print hello
 # sub = Subexec.run "echo 'hello' && sleep 3", :timeout => 5
@@ -30,11 +30,11 @@ class Subexec
 
   attr_accessor :pid,
                 :command,
-                :timeout,
-                :timer,
+                :lang,
                 :output,
                 :exitstatus,
-                :lang
+                :timeout,
+                :log_file
 
   def self.run(command, options={})
     sub = new(command, options)
@@ -44,8 +44,9 @@ class Subexec
   
   def initialize(command, options={})
     self.command    = command
-    self.timeout    = options[:timeout] || -1     # default is to never timeout
-    self.lang       = options[:lang]    || "C"
+    self.lang       = options[:lang]      || "C"
+    self.timeout    = options[:timeout]   || -1     # default is to never timeout
+    self.log_file   = options[:log_file]
     self.exitstatus = 0
   end
   
@@ -61,11 +62,17 @@ class Subexec
   private
   
     def spawn
-      r, w = IO.pipe
-      self.pid = Process.spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
+      # TODO: weak implementation for log_file support.
+      # Ideally, the data would be piped through to both descriptors
+      r, w = IO.pipe      
+      if !log_file.nil?
+        self.pid = Process.spawn({'LANG' => self.lang}, command, [:out, :err] => [log_file, 'a'])
+      else
+        self.pid = Process.spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
+      end
       w.close
-
-      self.timer = Time.now + timeout
+      
+      @timer = Time.now + timeout
       timed_out = false
 
       waitpid = Proc.new do
@@ -83,7 +90,7 @@ class Subexec
 
           break if ret == pid
           sleep 0.01
-          if Time.now > timer
+          if Time.now > @timer
             timed_out = true
             break
           end
@@ -111,4 +118,3 @@ class Subexec
     end
 
 end
-
