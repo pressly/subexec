@@ -30,3 +30,11 @@ puts sub.exitstatus # returns:`
 
 Only Ruby 1.9 can spawn non-blocking subprocesses, via Process.spawn.
 So Ruby 1.8 support is sheerly for backwards compatibility. 
+
+## Windows Support
+
+Limited Windows support is available. If someone would like to sponsor
+windows compatibility, we are more than happy to accept patches. However,
+our tests are run on Unix-like operating systems. Primarily, the intended
+effect should be that Subexec *works* on Windows, though it may not give
+many advantages.
