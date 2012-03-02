@@ -25,6 +25,8 @@
 # puts sub.output     # returns:
 # puts sub.exitstatus # returns:
 
+require 'posix-spawn'
+
 class Subexec
   VERSION = '0.2.1'
 
@@ -66,9 +68,9 @@ class Subexec
       # Ideally, the data would be piped through to both descriptors
       r, w = IO.pipe
       if !log_file.nil?
-        self.pid = Process.spawn({'LANG' => self.lang}, command, [:out, :err] => [log_file, 'a'])
+        self.pid = POSIX::Spawn::spawn({'LANG' => self.lang}, command, [:out, :err] => [log_file, 'a'])
       else
-        self.pid = Process.spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
+        self.pid = POSIX::Spawn::spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
       end
       w.close
 
