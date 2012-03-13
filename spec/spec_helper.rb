@@ -20,7 +20,7 @@ require 'subexec'
 require 'rspec'
 
 RSpec.configure do |config|
-  config.mock_with :rspec  
+  config.mock_with :rspec
 end
 
 TEST_PROG = File.join(File.dirname(__FILE__), 'helloworld.sh')

@@ -22,14 +22,14 @@ puts sub.output     # returns: hello
 puts sub.exitstatus # returns: 0
 
 sub = Subexec.run "echo 'hello' && sleep 3", :timeout => 1
-puts sub.output     # returns: 
+puts sub.output     # returns:
 puts sub.exitstatus # returns:`
 ```
 
 ## Limitations
 
 Only Ruby 1.9 can spawn non-blocking subprocesses, via Process.spawn.
-So Ruby 1.8 support is sheerly for backwards compatibility. 
+So Ruby 1.8 support is sheerly for backwards compatibility.
 
 ## Windows Support
 
