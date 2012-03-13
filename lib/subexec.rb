@@ -25,10 +25,10 @@
 # puts sub.output     # returns:
 # puts sub.exitstatus # returns:
 
+require 'subexec/version'
 require 'posix-spawn'
 
 class Subexec
-  VERSION = '0.2.1'
 
   attr_accessor :pid,
                 :command,
