@@ -12,7 +12,8 @@ $:.unshift(File.dirname(__FILE__))
 $:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 begin
-  require 'ruby-debug'
+  require 'pry'
+  require 'pry-nav'
 rescue LoadError
 end
 

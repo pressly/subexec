@@ -26,7 +26,7 @@
 # puts sub.exitstatus # returns:
 
 class Subexec
-  VERSION = '0.2.1'
+  VERSION = '0.2.2'
 
   attr_accessor :pid,
                 :command,
@@ -51,7 +51,7 @@ class Subexec
   end
   
   def run!
-    if RUBY_VERSION >= '1.9'
+    if RUBY_VERSION >= '1.9' && RUBY_ENGINE != 'jruby'
       spawn
     else
       exec

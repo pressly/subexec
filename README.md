@@ -14,6 +14,9 @@ and never returns control back to the original process. Enter Subexec.
 
 Tested with MRI 1.9.3, 1.9.2, 1.8.7
 
+Note: Process.spawn seems to be broken with JRuby 1.7.0.dev (as of
+April 20th, 2012), and so it uses Process.exec instead.
+
 ## Usage
 
 ```ruby
@@ -33,8 +36,7 @@ So Ruby 1.8 support is sheerly for backwards compatibility.
 
 ## Windows Support
 
-Limited Windows support is available. If someone would like to sponsor
-windows compatibility, we are more than happy to accept patches. However,
-our tests are run on Unix-like operating systems. Primarily, the intended
+Limited Windows support is available. We are more than happy to accept patches.
+However, our tests are run on Unix-like operating systems. Primarily, the intended
 effect should be that Subexec *works* on Windows, though it may not give
 many advantages.
