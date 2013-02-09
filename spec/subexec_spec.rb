@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe Subexec do
   context 'Subexec class' do
-    
     it 'run helloworld script' do
       sub = Subexec.run "#{TEST_PROG} 1"
       sub.output.should == "Hello\nWorld\n"
@@ -52,6 +51,5 @@ describe Subexec do
         log_file.unlink
       end
     end
-    
-  end  
+  end
 end

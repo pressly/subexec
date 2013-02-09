@@ -12,6 +12,10 @@ Useful for libraries that are Ruby wrappers for CLI's. For example,
 resizing images with ImageMagick's mogrify command sometimes stalls
 and never returns control back to the original process. Enter Subexec.
 
+If the posix-spawn gem is available it will be used for spawning
+which can provide a significant performance improvement in applications
+that have very large heaps.
+
 Tested with MRI 1.9.3, 1.9.2, 1.8.7
 
 Note: Process.spawn seems to be broken with JRuby 1.7.0.dev (as of

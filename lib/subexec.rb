@@ -12,6 +12,10 @@
 # resizing images with ImageMagick's mogrify command sometimes stalls
 # and never returns control back to the original process. Subexec
 # executes mogrify and preempts if it gets lost.
+#
+# If the posix-spawn gem is available it will be used for spawning
+# which can provide a significant performance improvement in applications
+# that have very large heaps.
 # 
 # ## Usage
 # 
@@ -24,6 +28,15 @@
 # sub = Subexec.run "echo 'hello' && sleep 3", :timeout => 1
 # puts sub.output     # returns: 
 # puts sub.exitstatus # returns:
+
+begin
+  # Check for posix-spawn gem. If it is available it will prevent the invoked
+  # processes from getting a copy of the ruby heap which can lead to significant
+  # performance gains.
+  require 'posix/spawn'
+rescue LoadError => e
+  # posix-spawn gem not available
+end
 
 class Subexec
   VERSION = '0.2.2'
@@ -64,62 +77,72 @@ class Subexec
     def spawn
       # TODO: weak implementation for log_file support.
       # Ideally, the data would be piped through to both descriptors
-      r, w = IO.pipe      
-      if !log_file.nil?
-        self.pid = Process.spawn({'LANG' => self.lang}, command, [:out, :err] => [log_file, 'a'])
-      else
-        self.pid = Process.spawn({'LANG' => self.lang}, command, STDERR=>w, STDOUT=>w)
-      end
-      w.close
-      
-      @timer = Time.now + timeout
-      timed_out = false
-
-      waitpid = Proc.new do
-        begin
-          flags = (timeout > 0 ? Process::WUNTRACED|Process::WNOHANG : 0)
-          Process.waitpid(pid, flags)
-        rescue Errno::ECHILD
-          break
+      r, w = IO.pipe
+      begin
+        io_args = (log_file ? {[:out, :err] => [log_file, 'a']} : {STDERR => w, STDOUT => w})
+        if defined?(POSIX::Spawn)
+          self.pid = POSIX::Spawn.spawn({'LANG' => self.lang}, command, io_args)
+        else
+          self.pid = Process.spawn({'LANG' => self.lang}, command, io_args)
         end
-      end
+        
+        w.close
+      
+        @timer = Time.now + timeout
+        timed_out = false
 
-      if timeout > 0
-        loop do
-          ret = waitpid.call
-
-          break if ret == pid
-          sleep 0.01
-          if Time.now > @timer
-            timed_out = true
+        waitpid = Proc.new do
+          begin
+            flags = (timeout > 0 ? Process::WUNTRACED|Process::WNOHANG : 0)
+            Process.waitpid(pid, flags)
+          rescue Errno::ECHILD
             break
           end
         end
-      else
-        waitpid.call
-      end
 
-      if timed_out
-        # The subprocess timed out -- kill it
-        Process.kill(9, pid) rescue Errno::ESRCH
-        self.exitstatus = nil
-      else
-        # The subprocess exited on its own
-        self.exitstatus = $?.exitstatus
-        self.output = r.readlines.join("")
+        if timeout > 0
+          loop do
+            ret = waitpid.call
+
+            break if ret == pid
+            sleep 0.01
+            if Time.now > @timer
+              timed_out = true
+              break
+            end
+          end
+        else
+          waitpid.call
+        end
+
+        if timed_out
+          # The subprocess timed out -- kill it
+          Process.kill(9, pid) rescue Errno::ESRCH
+          self.exitstatus = nil
+        else
+          # The subprocess exited on its own
+          self.exitstatus = $?.exitstatus
+          self.output = r.readlines.join("")
+        end
+      ensure
+        w.close unless w.closed?
+        r.close unless r.closed?
       end
-      r.close
-      
       self
     end
   
     def exec
-      if !(RUBY_PLATFORM =~ /win32|mswin|mingw/).nil?
-        self.output = `set LANG=#{lang} && #{command} 2>&1`
+      command_line = nil
+      if RUBY_PLATFORM =~ /win32|mswin|mingw/
+        command_line = "set LANG=#{lang} && #{command} 2>&1"
       else
-        self.output = `LANG=#{lang} && export $LANG && #{command} 2>&1`
+        command_line = "LANG=#{lang} #{command} 2>&1"
+      end
+      if defined?(POSIX::Spawn)
+        self.output = POSIX::Spawn.send(:`, command_line)
+      else
+        self.output = Kernel.send(:`, command_line)
       end
       self.exitstatus = $?.exitstatus
     end
-
 end
