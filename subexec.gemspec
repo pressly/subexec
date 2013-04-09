@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.summary     = "Subexec spawns a subprocess with an optional timeout"
   s.description = s.summary
+  s.license     = 'MIT'
   
   s.authors     = ["Peter Kieltyka"]
   s.email       = ["peter@nulayer.com"]
