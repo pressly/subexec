@@ -38,7 +38,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  posix-spawn (~> 0.3.8)
+  posix-spawn
   pry
   pry-nav
   rake
