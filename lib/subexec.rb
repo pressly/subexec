@@ -81,7 +81,11 @@ class Subexec
 
       log_to_file = !log_file.nil?
       log_opts = log_to_file ? {[:out, :err] => [log_file, 'a']} : {STDERR=>w, STDOUT=>w}
-      self.pid = Process.spawn({'LANG' => self.lang}, command, log_opts)
+      if posix_spawn_available?
+        self.pid = POSIX::Spawn.spawn({'LANG' => self.lang}, command, log_opts)
+      else
+        self.pid = Process.spawn({'LANG' => self.lang}, command, log_opts)
+      end
       w.close
 
       @timer = Time.now + timeout
