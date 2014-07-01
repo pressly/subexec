@@ -63,14 +63,14 @@ describe Subexec do
 
     it 'should use POSIX::Spawn if available' do
       sub = Subexec.run "#{TEST_PROG} 1"
-      sub.stub(:posix_spawn_available => true)
+      sub.stub(:posix_spawn_available? => true)
       sub.output.should == "Hello\nWorld\n"
       sub.exitstatus.should == 0
     end
 
     it 'should use built in spawn if POSIX::Spawn is not available' do
       sub = Subexec.run "#{TEST_PROG} 1"
-      sub.stub(:posix_spawn_available => true)
+      sub.stub(:posix_spawn_available? => false)
       sub.output.should == "Hello\nWorld\n"
       sub.exitstatus.should == 0
     end
