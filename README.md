@@ -1,3 +1,5 @@
+### **This library is deprecated, please see Open3 or https://github.com/rtomayko/posix-spawn **
+
 # Subexec
 by Peter Kieltyka
 http://github/nulayer/subexec
