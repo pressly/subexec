@@ -13,6 +13,10 @@
 # and never returns control back to the original process. Subexec
 # executes mogrify and preempts if it gets lost.
 #
+# If the posix-spawn gem is available it will be used for spawning
+# which can provide a significant performance improvement in applications
+# that have very large heaps.
+# 
 # ## Usage
 #
 # # Print hello
@@ -24,6 +28,15 @@
 # sub = Subexec.run "echo 'hello' && sleep 3", :timeout => 1
 # puts sub.output     # returns:
 # puts sub.exitstatus # returns:
+
+begin
+  # Check for posix-spawn gem. If it is available it will prevent the invoked
+  # processes from getting a copy of the ruby heap which can lead to significant
+  # performance gains.
+  require 'posix/spawn'
+rescue LoadError => e
+  # posix-spawn gem not available
+end
 
 class Subexec
   VERSION = '0.2.3'
@@ -68,7 +81,11 @@ class Subexec
 
       log_to_file = !log_file.nil?
       log_opts = log_to_file ? {[:out, :err] => [log_file, 'a']} : {STDERR=>w, STDOUT=>w}
-      self.pid = Process.spawn({'LANG' => self.lang}, command, log_opts)
+      if posix_spawn_available?
+        self.pid = POSIX::Spawn.spawn({'LANG' => self.lang}, command, log_opts)
+      else
+        self.pid = Process.spawn({'LANG' => self.lang}, command, log_opts)
+      end
       w.close
 
       @timer = Time.now + timeout
@@ -114,12 +131,21 @@ class Subexec
     end
 
     def exec
-      if !(RUBY_PLATFORM =~ /win32|mswin|mingw/).nil?
-        self.output = `set LANG=#{lang} && #{command} 2>&1`
+      command_line = nil
+      if RUBY_PLATFORM =~ /win32|mswin|mingw/
+        command_line = "set LANG=#{lang} && #{command} 2>&1"
       else
-        self.output = `LANG=#{lang} && export LANG && #{command} 2>&1`
+        command_line = "LANG=#{lang} #{command} 2>&1"
+      end
+      if posix_spawn_available?
+        self.output = POSIX::Spawn.send(:`, command_line)
+      else
+        self.output = Kernel.send(:`, command_line)
       end
       self.exitstatus = $?.exitstatus
     end
-
+    
+    def posix_spawn_available?
+      defined?(POSIX::Spawn)
+    end
 end
