@@ -115,7 +115,7 @@ class Subexec
 
     def exec
       if !(RUBY_PLATFORM =~ /win32|mswin|mingw/).nil?
-        self.output = `set LANG=#{lang} && #{command} 2>&1`
+        self.output = `set LANG=#{lang} && #{command} 2>NUL >NUL`
       else
         self.output = `LANG=#{lang} && export LANG && #{command} 2>&1`
       end
